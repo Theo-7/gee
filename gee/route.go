@@ -1,6 +1,7 @@
 package gee
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 )
@@ -61,12 +62,13 @@ func (r *Route) getRoute(method, path string) (*Node, map[string]string) {
 	if node != nil {
 		parts := parsePattern(node.pattern)
 		for index, part := range parts {
+			fmt.Println(part)
 			if part[0] == ':' {
-				params[part] = searchParts[index]
+				params[part[1:]] = searchParts[index]
 			}
 
 			if part[0] == '*' && len(part) > 1 {
-				params[part] = strings.Join(searchParts[index:], "/")
+				params[part[1:]] = strings.Join(searchParts[index:], "/")
 			}
 		}
 
