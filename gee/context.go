@@ -17,6 +17,10 @@ type Context struct {
 	Params map[string]string
 
 	StatusCode int
+
+	//middle
+	middle []HandleFunc
+	index  int
 }
 
 func NewContext(w http.ResponseWriter, req *http.Request) *Context {
@@ -25,6 +29,15 @@ func NewContext(w http.ResponseWriter, req *http.Request) *Context {
 		Req:    req,
 		Path:   req.URL.Path,
 		Method: req.Method,
+		index:  -1,
+	}
+}
+
+//调用中间件
+func (c *Context) Next() {
+	c.index++
+	for ; c.index < len(c.middle); c.index++ {
+		c.middle[c.index](c)
 	}
 }
 

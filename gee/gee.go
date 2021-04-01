@@ -2,6 +2,7 @@ package gee
 
 import (
 	"net/http"
+	"strings"
 )
 
 type HandleFunc func(*Context)
@@ -24,8 +25,14 @@ type (
 func New() *Engine {
 	engine := &Engine{Route: NewRoute()}
 	engine.routeGrounp = &routeGrounp{engine: engine}
-	engine.routeGrounps = make([]*routeGrounp, 0)
+	engine.routeGrounps = []*routeGrounp{engine.routeGrounp}
+	engine.Use(Recoverier())
 	return engine
+}
+
+//添加中间件
+func (g *routeGrounp) Use(handleFunc ...HandleFunc) {
+	g.middle = append(g.middle, handleFunc...)
 }
 
 func (g *routeGrounp) Group(prefix string) *routeGrounp {
@@ -59,7 +66,16 @@ func (engine *Engine) Run(addr string) (err error) {
 	return http.ListenAndServe(addr, engine)
 }
 
+//处理http请求
 func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	var middlewares []HandleFunc
+	for _, group := range engine.routeGrounps {
+		if strings.HasPrefix(req.URL.Path, group.prefix) {
+			middlewares = append(middlewares, group.middle...)
+		}
+	}
+
 	context := NewContext(w, req)
+	context.middle = middlewares
 	engine.Route.handle(context)
 }

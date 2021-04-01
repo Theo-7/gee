@@ -79,6 +79,7 @@ func (r *Route) getRoute(method, path string) (*Node, map[string]string) {
 
 }
 
+//调用函数
 func (route *Route) handle(c *Context) {
 	n, params := route.getRoute(c.Method, c.Path)
 
@@ -86,9 +87,12 @@ func (route *Route) handle(c *Context) {
 		key := c.Method + "-" + n.pattern
 		c.Params = params
 		handle := route.handler[key]
-		handle(c)
+		c.middle = append(c.middle, handle)
 	} else {
-		c.String(http.StatusNotFound, "404 not found %s", c.Path)
+		c.middle = append(c.middle, func(c *Context) {
+			c.String(http.StatusNotFound, "404 not found %s", c.Path)
+		})
 	}
 
+	c.Next()
 }
