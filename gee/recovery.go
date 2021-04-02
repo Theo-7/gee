@@ -18,9 +18,8 @@ func Tract() {
 func Recoverier() HandleFunc {
 	return func(c *Context) {
 		defer func() {
-			Tract()
 			if err := recover(); err != nil {
-
+				Tract()
 			}
 		}()
 
